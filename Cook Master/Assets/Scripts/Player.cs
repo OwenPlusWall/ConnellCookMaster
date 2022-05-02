@@ -20,32 +20,33 @@ public class Player : MonoBehaviour
     private bool moving = false; //Used to check whether the player is moving.
     private int direction = 0; //Used to check the direction the player is currently facing. 0 = down, 1 = right, 2 = up, 3 = left.
     private Animator playerAnimator; //The animator attached to the player GameObject.
-    private BoxCollider2D interactTrigger; //A trigger that determines whether the player is close enough to an object/tile to interact with it.
+    private BoxCollider2D interactTrigger; //A trigger that determines whether the player is close enough to an object/tile to interact with it, as well as determining collision.
+
+    private Tile selectedTile; //The tile that the player is currently interacting with, both in terms of interacting with vegetables, and collision.
 
 
     void ChangeDirection(string dir)
     {
-        //TO ADD: Check to make sure that objects/tiles are not in the way before moving.
-        //        This will be done once objects/tiles are implemented.
+        selectedTile = null; //Reset selectedTile to give freedom to move in a different direction.
 
         //Set information such as the player's animation and the relative position of the interactTrigger based on the direciton specified.
         //For the Animator: 0 = down, 1 = right, 2 = up, 3= left (counter-clockwise, starting from down, the default direction).
         switch (dir)
         {
             case "down":
-                interactTrigger.offset = new Vector2(0, -10);
+                interactTrigger.offset = new Vector2(0, -16f); //Change the position of the interactTrigger relative to the player.
                 direction = 0;
                 break;
             case "right":
-                interactTrigger.offset = new Vector2(10, 0);
+                interactTrigger.offset = new Vector2(16f, 0);
                 direction = 1;
                 break;
             case "up":
-                interactTrigger.offset = new Vector2(0, 10);
+                interactTrigger.offset = new Vector2(0, 16f);
                 direction = 2;
                 break;
             case "left":
-                interactTrigger.offset = new Vector2(-10, 0);
+                interactTrigger.offset = new Vector2(-16f, 0);
                 direction = 3;
                 break;
         }
@@ -54,14 +55,7 @@ public class Player : MonoBehaviour
         playerAnimator.SetInteger("direction", direction);
     }
 
-
-    void Start()
-    {
-        playerAnimator = this.GetComponent<Animator>();
-        interactTrigger = this.GetComponent<BoxCollider2D>();
-    }
-
-    void Update()
+    void PlayerMovement()
     {
         //When a movement key is pressed, change the direction the player is moving in.
         //Precedence is given to the last key that was pressed. (If holding down a key and then another is pressed, the direction will change).
@@ -128,6 +122,73 @@ public class Player : MonoBehaviour
             }
         }
     }
+
+    //Check to see if the player is in an area where they shouldn't be, and move them back into a proper position if they are.
+    void CheckCollision()
+    {
+        switch (direction) //For each direction...
+        {
+            case 0:
+                if (selectedTile && selectedTile.solid && this.transform.position.y < selectedTile.transform.position.y + 16) //If the player has moved beyond a point where they should be...
+                {
+                    this.transform.position = new Vector2(this.transform.position.x, selectedTile.transform.position.y + 16); //Move them back to the proper position relative to the tile (16 units in the direction opposite to the player).
+                }
+                break;
+            case 1:
+                if (selectedTile && selectedTile.solid && this.transform.position.x > selectedTile.transform.position.x - 16)
+                {
+                    this.transform.position = new Vector2(selectedTile.transform.position.x - 16, this.transform.position.y);
+                }
+                break;
+            case 2:
+                if (selectedTile && selectedTile.solid && this.transform.position.y > selectedTile.transform.position.y - 16)
+                {
+                    this.transform.position = new Vector2(this.transform.position.x, selectedTile.transform.position.y - 16);
+                }
+                break;
+            case 3:
+                if (selectedTile && selectedTile.solid && this.transform.position.x < selectedTile.transform.position.x + 16)
+                {
+                    this.transform.position = new Vector2(selectedTile.transform.position.x + 16, this.transform.position.y);
+                }
+                break;
+
+        }
+    }
+
+
+    //If the interactTrigger finds a Tile...
+    private void OnTriggerStay2D(Collider2D collision)
+    {
+        Tile newTile = collision.GetComponent<Tile>();
+        if (collision.GetComponent<Tile>())
+        {
+            selectedTile = newTile; //Set the Tile found to the current selectedTile.
+        }
+    }
+
+    //If the interactTrigger moves out of the range of a tile...
+    private void OnTriggerExit2D(Collider2D collision)
+    {
+        if (selectedTile == collision.GetComponent<Tile>())
+        {
+            selectedTile = null; //Reset the current selectedTile.
+        }
+    }
+
+
+    void Start()
+    {
+        playerAnimator = this.GetComponent<Animator>();
+        interactTrigger = this.GetComponent<BoxCollider2D>();
+    }
+
+    void Update()
+    {
+        PlayerMovement();
+        CheckCollision();
+    }
+
 
 }
 
