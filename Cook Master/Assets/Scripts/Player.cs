@@ -11,9 +11,11 @@ public class Player : MonoBehaviour
     public float time; //The amount of time the player has remaining.
     public int score; //The player's current score.
     public List<Vegetable> vegetables; //The player's vegetables on-hand.
+    public Salad salad; //The salad the player is carrying (if any).
     public bool immobile = false; //Whether the player can move.
     public float moveSpeed; //How fast the player can move. This can be modified by powerups.
     public float chopSpeed; //How fast the player can chop vegetables. This can be modified by powerups.
+    public bool cutting = false; //Whether the player is in the middle of cutting a vegetable.
 
     public List<Powerup> powerups; //What powerups are currently active on the player. These are added when the player collects a powerup, and are removed whenever a powerup has expired.
 
@@ -22,7 +24,7 @@ public class Player : MonoBehaviour
     private Animator playerAnimator; //The animator attached to the player GameObject.
     private BoxCollider2D interactTrigger; //A trigger that determines whether the player is close enough to an object/tile to interact with it, as well as determining collision.
 
-    private Tile selectedTile; //The tile that the player is currently interacting with, both in terms of interacting with vegetables, and collision.
+    private ITile selectedTile; //The tile that the player is currently interacting with, both in terms of interacting with vegetables, and collision.
 
 
     void ChangeDirection(string dir)
@@ -129,30 +131,41 @@ public class Player : MonoBehaviour
         switch (direction) //For each direction...
         {
             case 0:
-                if (selectedTile && selectedTile.solid && this.transform.position.y < selectedTile.transform.position.y + 16) //If the player has moved beyond a point where they should be...
+                if (selectedTile != null && selectedTile.GetSolidity() && this.transform.position.y < selectedTile.gameObject.transform.position.y + 16) //If the player has moved beyond a point where they should be...
                 {
-                    this.transform.position = new Vector2(this.transform.position.x, selectedTile.transform.position.y + 16); //Move them back to the proper position relative to the tile (16 units in the direction opposite to the player).
+                    this.transform.position = new Vector2(this.transform.position.x, selectedTile.gameObject.transform.position.y + 16); //Move them back to the proper position relative to the tile (16 units in the direction opposite to the player).
                 }
                 break;
             case 1:
-                if (selectedTile && selectedTile.solid && this.transform.position.x > selectedTile.transform.position.x - 16)
+                if (selectedTile != null && selectedTile.GetSolidity() && this.transform.position.x > selectedTile.gameObject.transform.position.x - 16)
                 {
-                    this.transform.position = new Vector2(selectedTile.transform.position.x - 16, this.transform.position.y);
+                    this.transform.position = new Vector2(selectedTile.gameObject.transform.position.x - 16, this.transform.position.y);
                 }
                 break;
             case 2:
-                if (selectedTile && selectedTile.solid && this.transform.position.y > selectedTile.transform.position.y - 16)
+                if (selectedTile != null && selectedTile.GetSolidity() && this.transform.position.y > selectedTile.gameObject.transform.position.y - 16)
                 {
-                    this.transform.position = new Vector2(this.transform.position.x, selectedTile.transform.position.y - 16);
+                    this.transform.position = new Vector2(this.transform.position.x, selectedTile.gameObject.transform.position.y - 16);
                 }
                 break;
             case 3:
-                if (selectedTile && selectedTile.solid && this.transform.position.x < selectedTile.transform.position.x + 16)
+                if (selectedTile != null && selectedTile.GetSolidity() && this.transform.position.x < selectedTile.gameObject.transform.position.x + 16)
                 {
-                    this.transform.position = new Vector2(selectedTile.transform.position.x + 16, this.transform.position.y);
+                    this.transform.position = new Vector2(selectedTile.gameObject.transform.position.x + 16, this.transform.position.y);
                 }
                 break;
 
+        }
+    }
+
+    void TileInteraction()
+    {
+        if (Input.GetKeyDown(controls.use))
+        {
+            if (selectedTile != null)
+            {
+                selectedTile.Interact(this);
+            }
         }
     }
 
@@ -160,8 +173,8 @@ public class Player : MonoBehaviour
     //If the interactTrigger finds a Tile...
     private void OnTriggerStay2D(Collider2D collision)
     {
-        Tile newTile = collision.GetComponent<Tile>();
-        if (collision.GetComponent<Tile>())
+        ITile newTile = collision.GetComponent<ITile>();
+        if (newTile != null)
         {
             selectedTile = newTile; //Set the Tile found to the current selectedTile.
         }
@@ -170,7 +183,7 @@ public class Player : MonoBehaviour
     //If the interactTrigger moves out of the range of a tile...
     private void OnTriggerExit2D(Collider2D collision)
     {
-        if (selectedTile == collision.GetComponent<Tile>())
+        if (selectedTile == collision.GetComponent<ITile>())
         {
             selectedTile = null; //Reset the current selectedTile.
         }
@@ -185,7 +198,11 @@ public class Player : MonoBehaviour
 
     void Update()
     {
-        PlayerMovement();
+        if (!cutting)
+        {
+            PlayerMovement();
+            TileInteraction();
+        }
         CheckCollision();
     }
 

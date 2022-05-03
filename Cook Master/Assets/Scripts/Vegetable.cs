@@ -2,8 +2,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Vegetable : MonoBehaviour
+public class Vegetable : Grabbable
 {
-    int id = 0;
-    bool chopped = false; //Whether the vegetable has been chopped. Will not count towards an order unless this is "true".
+    public List<Sprite> spriteList;
+    public int id = 0;
+    private SpriteRenderer veggieSprite;
+
+
+    public void SetSprite()
+    {
+        veggieSprite = this.GetComponent<SpriteRenderer>();
+        veggieSprite.sprite = spriteList[id];
+    }
 }
