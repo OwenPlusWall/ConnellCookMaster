@@ -17,4 +17,4 @@ I left room on the HUD to indicate that a Speedup Powerup was active for a playe
 I would need to make sure that the sprite layering doesn't conflict, so some of the layer ordering may have to change, but given the small size of the project, that would not take more than a few minutes to change.
 
 3. A scoreboard. This would be a static List that would keep track of the top scores between play sessions, and I would indicate which player got the high score (Blue or Red).
-If I wanted to, I could also make the score safe to and load from a file, so that the program can maintain the scores even after closing it.
+If I wanted to, I could also make the score save to and load from a file, so that the program can maintain the scores even after closing it.
