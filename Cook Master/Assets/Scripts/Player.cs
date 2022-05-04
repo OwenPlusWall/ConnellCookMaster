@@ -7,8 +7,9 @@ using UnityEngine;
 public class Player : MonoBehaviour
 {
     public PlayerControls controls; //The keys that the player uses to move/interact with the game. These differ by player.
+    public HUD playerHUD; //The  object that controls the HUD's appearance for this player.
 
-    public float time; //The amount of time the player has remaining.
+    public int time = 180; //The amount of time the player has remaining.
     public int score; //The player's current score.
     public List<Vegetable> vegetables; //The player's vegetables on-hand.
     public Salad salad; //The salad the player is carrying (if any).
@@ -25,6 +26,7 @@ public class Player : MonoBehaviour
     private BoxCollider2D interactTrigger; //A trigger that determines whether the player is close enough to an object/tile to interact with it, as well as determining collision.
 
     private ITile selectedTile; //The tile that the player is currently interacting with, both in terms of interacting with vegetables, and collision.
+    private float timer = 1.0f;
 
 
     void ChangeDirection(string dir)
@@ -169,6 +171,16 @@ public class Player : MonoBehaviour
         }
     }
 
+    public void UpdateScore(int points)
+    {
+        score += points;
+        if (score < 0)
+        {
+            score = 0;
+        }
+        playerHUD.UpdateScore();
+    }
+
 
     //If the interactTrigger finds a Tile...
     private void OnTriggerStay2D(Collider2D collision)
@@ -194,6 +206,8 @@ public class Player : MonoBehaviour
     {
         playerAnimator = this.GetComponent<Animator>();
         interactTrigger = this.GetComponent<BoxCollider2D>();
+        playerHUD.UpdateInventory();
+        playerHUD.UpdateTime();
     }
 
     void Update()
@@ -204,6 +218,17 @@ public class Player : MonoBehaviour
             TileInteraction();
         }
         CheckCollision();
+
+        timer -= Time.deltaTime;
+        if (timer <= 0)
+        {
+            if (time > 0)
+            {
+                time -= 1;
+            }
+            timer = 1.0f;
+            playerHUD.UpdateTime();
+        }
     }
 
 

@@ -125,6 +125,6 @@ MonoBehaviour:
   storage: 0
   saladObject: {fileID: 5485304889401608151, guid: 5f56c46067062fd43988ae89f963e98e,
     type: 3}
-  cutTime: 0
+  cutTime: 5
   chopSpeed: 0
   interacting: 0
